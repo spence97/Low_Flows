@@ -1,0 +1,36 @@
+#Installing and loading dataRetrieval Package.
+install.packages("dataRetrieval")
+library("dataRetrieval")
+### === === === === === === === === === === === === === === === === === === === === === === === ###
+#USGS site identification number (Enter the Gauge number/8 or 7 digits number):
+Gauge_Id<-11206820
+#Enter the quantile value for baseflow definition (Default is 0.05) 
+Q<-0.05
+#Changes the format from ABCD to "ABCD" and adds 0 to begining of gauge id if it starts with 0.
+if (floor(Gauge_Id/10000000)>0) {site_id<-paste0("",Gauge_Id)
+}else{
+site_id<-paste0("",Gauge_Id)
+site_id<-paste0("0",site_id)
+}
+# The begining date is set to 1900/01/01 and the end date is the last date with the available data in the website
+# and average daily stream discharge is loaded (pCode=00060):
+startDate <- '1900-01-01'
+endDate <- ''
+pCode <- '00060'
+#Retrieving data from the website==> : https://waterservices.usgs.gov/
+rawDailyQ <- readNWISdv(site_id,pCode, startDate, endDate)
+# Calculating Baseflow, maximum, minimum, average and median flow in the stream (ft^3/s)
+BaseFLow<-quantile(rawDailyQ[,4],na.rm = FALSE, Q)
+BaseFLow<-as.numeric(BaseFLow)
+Max<-max(rawDailyQ[,4],na.rm = FALSE)
+Min<-min(rawDailyQ[,4],na.rm = FALSE)
+Average<-mean(rawDailyQ[,4],na.rm = FALSE)
+Median<-median(rawDailyQ[,4],na.rm = FALSE)
+Flow_Char<-data.frame(site_id,BaseFLow,Max,Min,Average,Median)
+
+#Results in notepad format
+write.table(Flow_Char,site_id,quote=FALSE,append=FALSE,sep=" | ",row.names=FALSE)
+
+#Results in CSV format
+write.csv(Flow_Char, file = "Flow_Char.csv")
+
