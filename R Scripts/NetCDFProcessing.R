@@ -34,11 +34,14 @@ agg_hourly_streamflow = function(directory,comids){
       #Add hourly streamflow value to data frame
       hourlyQDF[(hourlyQDF$Hour==x),as.character(i)]=nwmData
       }
+      nc_close(nwmFile)
     }
+    
     #Calculate daily mean streamflow
     meanDailyQ=colMeans(hourlyQDF[,2:length(hourlyQDF)],na.rm=TRUE)
     #Add daily mean streamflow to data frame
     dailyQDF[(dailyQDF$Date==y),c(as.character(featureIndex))]=meanDailyQ
+    print(y)
   }
   #Output results to csv file
   write.csv(dailyQDF,file=paste0(directory,"/",year,".csv"),row.names=FALSE)
