@@ -1,10 +1,5 @@
 library(ncdf4)
 
-#Set working directory to folder with a year of NetCDF data
-directory=getwd()
-#Set reach (From list of subsetted reaches/gages)
-comids=c(22548559,8212073)
-
 agg_hourly_streamflow = function(directory,comids){
   year=substr(directory,nchar(directory)-3,nchar(directory))
   #Create list for cycling through hourly files
@@ -12,10 +7,9 @@ agg_hourly_streamflow = function(directory,comids){
   
   #Cycle through the hourly time steps and convert to daily
   ncdfFileList=shell('dir /b', intern=TRUE)
-  dateList=substr(ncdfFileList,5,8)
+  dateList=unique(substr(ncdfFileList,5,8))
   #Initialize data frame for daily summaries
   dailyQDF=data.frame(Date = dateList)
-  dailyQDF[as.character(featureIndex)]=NA
   for (y in dateList){
     #Initialize data frame for hourly values
     hourlyQDF=data.frame(Hour=hourList)
@@ -27,6 +21,9 @@ agg_hourly_streamflow = function(directory,comids){
       #Get index of COMID from netcdf (dim=1 is the stream reach)
       featureIDList=nwmFile$dim$feature_id$vals
       featureIndex=match(comids,featureIDList)
+      if (y=="0101" & x == "01"){
+        dailyQDF[as.character(featureIndex)]=NA
+      }
       
       for (i in featureIndex){
       #Get streamflow for chosen reaches(in cms)
@@ -47,3 +44,10 @@ agg_hourly_streamflow = function(directory,comids){
   write.csv(dailyQDF,file=paste0(directory,"/",year,".csv"),row.names=FALSE)
   
 }
+
+#Set working directory to folder with a year of NetCDF data
+directory=getwd()
+#Set reach (From list of subsetted reaches/gages)
+comids=c(8020924,17609017,17611425,18578829)
+
+agg_hourly_streamflow(directory,comids)
