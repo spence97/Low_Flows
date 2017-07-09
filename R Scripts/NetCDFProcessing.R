@@ -43,9 +43,11 @@ agg_hourly_streamflow = function(directory,comids){
     dailyQDF[(dailyQDF$Date==y),c(as.character(featureIndex))]=meanDailyQ
     print(y)
   }
+  #Format Date
+  dailyQDF$Date=as.Date(paste0(year,"-",substr(dailyQDF$Date,1,2),"-",substr(dailyQDF$Date,3,4)))
   #Output results to csv file
   write.csv(dailyQDF,file=paste0(directory,"/",year,".csv"),row.names=FALSE)
-  
+  return(dailyQDF)
 }
 
 #Set working directory to folder with a year of NetCDF data
@@ -53,4 +55,4 @@ directory=getwd()
 #Set reach (From list of subsetted reaches/gages)
 comids=c(8020924,17609017,17611425,18578829)
 
-agg_hourly_streamflow(directory,comids)
+daily_QDF=agg_hourly_streamflow(directory,comids)
