@@ -1,19 +1,43 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 import plotly.graph_objs as go
-from tethys_sdk.gizmos import MapView, Button, ToggleSwitch, TextInput, PlotlyView
+from tethys_sdk.gizmos import MapView, MVView, MVLayer, MVLegendClass, Button, ToggleSwitch, TextInput, PlotlyView
 
 @login_required()
 def home(request):
     """
     Controller for the app home page.
     """
-    watershed_map = MapView(
-        height='50%',
-        width='50%',
-        layers=[],
-        basemap='OpenStreetMap',
+
+    # Define view options
+    view_options = MVView(
+        projection='EPSG:4326',
+        center=[-100, 40],
+        zoom=3.5,
+        maxZoom=18,
+        minZoom=2
     )
+
+    arc_gis_layer = MVLayer(
+        source='TileArcGISRest',
+        options={
+            'url': 'http://geoserver.byu.edu/arcgis/rest/services/NWM/nwm_channel_v10/MapServer'},
+        legend_title='NHD Streams',
+        legend_extent=[-173, 17, -65, 72]
+    )
+
+    # Define map view options
+    watershed_map = MapView(
+        height='100%',
+        width='100%',
+        controls=['ZoomSlider', 'Rotate', 'FullScreen',
+                  {'ZoomToExtent': {'projection': 'EPSG:4326', 'extent': [-130, 22, -65, 54]}}],
+        layers=[arc_gis_layer],
+        view=view_options,
+        basemap='OpenStreetMap',
+        legend=True
+    )
+
 
     forecast_plot = PlotlyView(
         [go.Scatter(x=[3, 5, 7], y=[1, 3, 6])]
@@ -125,7 +149,7 @@ def home(request):
         'edit_button': edit_button,
         'remove_button': remove_button,
         'previous_button': previous_button,
-        'next_button': next_button
+        'next_button': next_button,
     }
 
     return render(request, 'low_flows/home.html', context)

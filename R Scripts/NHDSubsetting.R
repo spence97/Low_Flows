@@ -59,7 +59,7 @@ library(sp)
 coordinates(stream_subset_HDI)=3:4
 plot(State_Select)
 points(stream_subset_HDI)
-writeOGR(stream_subset_HDI,layer='gage_locations_AL', 'C:/Users/Spencer/Documents/Research/SI/GitHub/Low_Flows/Low_Flows/Accessory Files/Shapefiles/', driver="ESRI Shapefile")
+writeOGR(stream_subset_HDI,layer='gage_locations_AL', 'C:/Users/Spencer/Documents/Research/SI/GitHub/Low_Flows/Low_Flows/Accessory Files/Shapefiles/AL', driver="ESRI Shapefile")
 
 
 
