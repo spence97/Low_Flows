@@ -18,23 +18,33 @@ agg_hourly_streamflow = function(directory,comids){
       ncdfFileName=paste0(year,y,x,"00_streamflow.nc")
       ncdfFile=paste0(directory,"/",ncdfFileName)
       nwmFile=nc_open(ncdfFile,readunlim=FALSE)
-      #Get index of COMID from netcdf (dim=1 is the stream reach)
-      featureIDList=nwmFile$dim$feature_id$vals
-      featureIndex=match(comids,featureIDList)
-      if (y=="0101" & x == "01"){
-        dailyQDF[as.character(featureIndex)]=NA
+      #Check if the streamflow data is missing (if so, assign NA value)
+      if (nwmFile$dim$time$len==0){
+        #Get index of COMID from netcdf (dim=1 is the stream reach)
+        featureIDList=nwmFile$dim$feature_id$vals
+        featureIndex=match(comids,featureIDList)
+        for (i in featureIndex){
+          hourlyQDF[(hourlyQDF$Hour==x),as.character(i)]=NA
+        }
+        nc_close(nwmFile)
+      }else{
+        #Get index of COMID from netcdf (dim=1 is the stream reach)
+        featureIDList=nwmFile$dim$feature_id$vals
+        featureIndex=match(comids,featureIDList)
+        if (y=="0101" & x == "01"){
+          dailyQDF[as.character(featureIndex)]=NA
+        }
+        for (i in featureIndex){
+          #Get streamflow for chosen reaches(in cms)
+          nwmData=ncvar_get(nwmFile,
+                         varid="streamflow",
+                         start=c(i,1), #Start value for dimensions (first value is stream reach index)
+                         count = c(1,-1)) #Number of values to get in each dimension
+          #Add hourly streamflow value to data frame
+          hourlyQDF[(hourlyQDF$Hour==x),as.character(i)]=nwmData
+        }
+        nc_close(nwmFile)
       }
-      
-      for (i in featureIndex){
-      #Get streamflow for chosen reaches(in cms)
-      nwmData=ncvar_get(nwmFile,
-                     varid="streamflow",
-                     start=c(i,1), #Start value for dimensions (first value is stream reach index)
-                     count = c(1,-1)) #Number of values to get in each dimension
-      #Add hourly streamflow value to data frame
-      hourlyQDF[(hourlyQDF$Hour==x),as.character(i)]=nwmData
-      }
-      nc_close(nwmFile)
     }
     
     #Calculate daily mean streamflow
@@ -45,6 +55,8 @@ agg_hourly_streamflow = function(directory,comids){
   }
   #Format Date
   dailyQDF$Date=as.Date(paste0(year,"-",substr(dailyQDF$Date,1,2),"-",substr(dailyQDF$Date,3,4)))
+  #Rename Columns to have COMIDs instead of index values
+  names(dailyQDF)=c("Date",as.character(comids))
   #Output results to csv file
   write.csv(dailyQDF,file=paste0(directory,"/",year,".csv"),row.names=FALSE)
   return(dailyQDF)
@@ -56,3 +68,7 @@ directory=getwd()
 comids=c(8020924,17609017,17611425,18578829)
 
 daily_QDF=agg_hourly_streamflow(directory,comids)
+
+ncdfFile="D:/2003/200303050400_streamflow.nc"
+nwmFile=nc_open(ncdfFile,readunlim=FALSE)
+print(nwmFile)
