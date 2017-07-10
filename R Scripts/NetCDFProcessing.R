@@ -68,7 +68,3 @@ directory=getwd()
 comids=c(8020924,17609017,17611425,18578829)
 
 daily_QDF=agg_hourly_streamflow(directory,comids)
-
-ncdfFile="D:/2003/200303050400_streamflow.nc"
-nwmFile=nc_open(ncdfFile,readunlim=FALSE)
-print(nwmFile)
