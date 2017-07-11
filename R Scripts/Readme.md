@@ -6,5 +6,6 @@ Script Name | Function
 NetCDFProcessing.R | Aggregates hourly NWM streamflow data for a number of user-specified stream reaches. Processes a single year's data files at a time.
 Data Fetch.R | Read the final version please (DataFetch - final.R)
 NHDSubsetting.R | Takes the full NHD stream reach feature class and subsets it based on state boundary, stream order, Hydrologic Disturbance Index (HDI), and USGS gage data availability.  Returns a .csv file linking COMID to gageID for the subsetted stream reaches.
-DataFetch - final| Read the information for all gauges in California, starting 1993-01-01 to 2016-10-31, Including Discharge, Temperature, and DO. Then monthly statistics, including maximum, minimum, and average is calculated. For each gauge, the HDI, base flow (based on 5% quantile and 25% quantile) and finally, percentage of available data for Discharge, Temperature,and DO is calculated.
-==> The result of this code is available on Google.Drive (USGS_Gauges/Cal_USGS.csv)
+DataFetch - final| Read the information for all gauges in California, starting 1993-01-01 to 2016-10-31, Including Discharge, Temperature, and DO. Then monthly statistics, including maximum, minimum, and average is calculated. For each gauge, the HDI, base flow (based on 5% quantile and 25% quantile) and finally, percentage of available data for Discharge, Temperature,and DO is calculated. The result of this code is available on Google.Drive (USGS_Gauges/Cal_USGS.csv)
+CalcMonthlyStats.R | Contains functions for calculating the monthly statistics (min, avg, max, 7Q10, 7Q2, 5%, and 25%) for both USGS data (reads in data with dataRetrieval for a specific gage) and NWM retrospective data (reads in aggregated data from .csv for a specific comID) 
+
