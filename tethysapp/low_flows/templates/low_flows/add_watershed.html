@@ -1,0 +1,18 @@
+{% extends "low_flows/base.html" %}
+{% load tethys_gizmos %}
+
+{% block app_content %}
+  <h1>Add Watershed</h1>
+  <form id="add-watershed-form" method="post">
+    {% csrf_token %}
+    {% gizmo watershed_name_input %}
+    {% gizmo shapefile_input %}
+    {% gizmo statsfile_input %}
+    {% gizmo low_thresh_input %}
+  </form>
+{% endblock %}
+
+{% block app_actions %}
+  {% gizmo cancel_button %}
+  {% gizmo add_button %}
+{% endblock %}

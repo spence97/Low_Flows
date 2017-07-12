@@ -1,0 +1,12 @@
+{% extends "low_flows/base.html" %}
+{% load tethys_gizmos %}
+
+{% block app_content %}
+  <h1>NWM</h1>
+  <h2>Long Range Forecast</h2>
+    {% gizmo nwm_plot %}
+{% endblock %}
+
+{% block app_actions %}
+  {% gizmo cancel_button %}
+{% endblock %}

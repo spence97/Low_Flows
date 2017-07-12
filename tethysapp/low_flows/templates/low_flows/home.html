@@ -22,7 +22,6 @@
 
 {% block app_content %}
   {% gizmo watershed_map %}
-  {% gizmo plotly_view_input %}
 {% endblock %}
 
 {# Use the after_app_content block for modals #}
@@ -49,11 +48,7 @@
 {% endblock %}
 
 {% block app_actions %}
-  {% gizmo save_button %}
-  {% gizmo edit_button %}
-  {% gizmo remove_button %}
-  {% gizmo previous_button %}
-  {% gizmo next_button %}
+  {% gizmo view_forecast_button %}
 {% endblock %}
 
 {% block styles %}
