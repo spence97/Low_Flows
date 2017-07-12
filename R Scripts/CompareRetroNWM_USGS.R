@@ -1,5 +1,6 @@
 library(hydroGOF)
 library(dataRetrieval)
+library(lubridate)
 
 gageID="11383500"
 comID="8020924"
@@ -21,6 +22,8 @@ retroNWM_USGS_Eval = function(gageID,comID){
     perc.rank = (trunc(rank(data[,2]))/length(data[,2]))*100
     return(perc.rank)
   }
+  
+  #Overall GOF---------------------------------------------------------------------------------
   qDataNWM$ModelQPerc = calc_percentile(data=qDataNWM) 
   qDataUSGS$USGSQPerc = calc_percentile(data=qDataUSGS)
   
@@ -28,8 +31,9 @@ retroNWM_USGS_Eval = function(gageID,comID){
   QGOF_absolute = gof(sim=qDataNWM$ModelDischarge,obs=qDataUSGS$GageDischarge)
   #Graphical representation
   #ggof(sim=qDataNWM$ModelQPerc,obs=qDataUSGS$USGSQPerc)
+  #--------------------------------------------------------------------------------------------
   
-  #GOF by season
+  #GOF by season------------------------------------------------------------------------------  
   seasonsubset = function(dataframe){
     dataframe[(months(dataframe$Date) %in% c("January","February","March")),"Season"] = "Winter"
     dataframe[(months(dataframe$Date) %in% c("April","May","June")),"Season"] = "Spring"
@@ -55,10 +59,29 @@ retroNWM_USGS_Eval = function(gageID,comID){
     SeasonalGOF_relative[,i]=tempgof_relative[,1]
     SeasonalGOF_absolute[,i]=tempgof_absolute[,1]
   }
-  row.names(SeasonalGOF_relative)=row.names(tempgof_relative)
-  row.names(SeasonalGOF_absolute)=row.names(tempgof_absolute)
+  row.names(SeasonalGOF_relative) = row.names(tempgof_relative)
+  row.names(SeasonalGOF_absolute) = row.names(tempgof_absolute)
+  #-------------------------------------------------------------------------------------------
+  #GOF by year
+  qDataUSGS$Year = year(qDataUSGS$Date)
+  qDataNWM$Year = year(qDataNWM$Date)
+  YearlyGOF_relative = data.frame(matrix(ncol = 24, nrow = 20))
+  colnames(YearlyGOF_relative)=as.character(seq(1993,2016,by=1))
+  YearlyGOF_absolute = data.frame(matrix(ncol = 24, nrow = 20))
+  colnames(YearlyGOF_absolute)=as.character(seq(1993,2016,by=1))
+  for (j in seq(1993,2016,by=1)){
+    tempgof_relative=gof(sim=qDataNWM[(qDataNWM$Year==j),"ModelQPerc"],
+                         obs=qDataUSGS[(qDataUSGS$Year==j),"USGSQPerc"])
+    tempgof_absolute=gof(sim=qDataNWM[(qDataNWM$Year==j),"ModelDischarge"],
+                         obs=qDataUSGS[(qDataUSGS$Year==j),"GageDischarge"])
+    YearlyGOF_relative[,as.character(j)]=tempgof_relative[,1]
+    YearlyGOF_absolute[,as.character(j)]=tempgof_absolute[,1]
+  }
+  row.names(YearlyGOF_relative) = row.names(tempgof_relative)
+  row.names(YearlyGOF_absolute) = row.names(tempgof_absolute)
+  #--------------------------------------------------------------------------------------------
   
-  return(list(QGOF_relative,QGOF_absolute,SeasonalGOF_relative,SeasonalGOF_absolute))
+  return(list(QGOF_relative,QGOF_absolute,SeasonalGOF_relative,SeasonalGOF_absolute,YearlyGOF_relative,YearlyGOF_absolute))
   
 } 
 
