@@ -1,6 +1,6 @@
 library(ncdf4)
 
-agg_hourly_streamflow = function(directory,comids){
+agg_hourly_streamflow = function(directory,comids,suffix){
   year=substr(directory,nchar(directory)-3,nchar(directory))
   #Create list for cycling through hourly files
   hourList=sprintf("%02d",seq(0,23,by=1))
@@ -58,13 +58,13 @@ agg_hourly_streamflow = function(directory,comids){
   #Rename Columns to have COMIDs instead of index values
   names(dailyQDF)=c("Date",as.character(comids))
   #Output results to csv file
-  write.csv(dailyQDF,file=paste0(directory,"/",year,".csv"),row.names=FALSE)
+  write.csv(dailyQDF,file=paste0(directory,"/",year,suffix,".csv"),row.names=FALSE)
   return(dailyQDF)
 }
 
 #Set working directory to folder with a year of NetCDF data
 directory=getwd()
 #Set reach (From list of subsetted reaches/gages)
-comids=c(8020924,17609017,17611425,18578829)
-
-daily_QDF=agg_hourly_streamflow(directory,comids)
+comidfile=read.csv('~/GitHub/Low_Flows/Accessory Files/COMID2gage Index Tables/AL/NHDSubsetStreamOrder3_AL.csv')
+comids=comidfile$COMID
+daily_QDF=agg_hourly_streamflow(directory,comids,suffix="AL_Casestudy")
