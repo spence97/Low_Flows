@@ -9,13 +9,13 @@ retroNWM_USGS_Eval = function(gageID,comID){
   #Get discharge USGS Data
   qDataUSGS = readNWISdata(sites=gageID, service="dv",parameterCd="00060",
                        startDate="1993-01-01",endDate="2016-10-31")
-  qDataUSGS = data.frame(Date=as.Date(qDataUSGS$dateTime),GageDischarge=qDataUSGS$X_00060_00003)
+  qDataUSGS = data.frame(Date=as.Date(qDataUSGS$dateTime),Discharge=qDataUSGS$X_00060_00003)
   #Get discharge from Historical Modeled (Retrospective) data
   qDataNWM = read.csv('~/GitHub/Low_Flows/RetrospectiveData/RetroRecord_cfs.csv')
   qDataNWM$Date = as.Date(qDataNWM$Date, format="%m/%d/%Y")
   comID_column = paste0("X",comID)
   qDataNWM = qDataNWM[,(names(qDataNWM) %in% c("Date",comID_column))]
-  colnames(qDataNWM)=c("Date","ModelDischarge")
+  colnames(qDataNWM)=c("Date","Discharge")
 
   #Calculate percentile of flow from historical data
   calc_percentile = function(data){
@@ -24,13 +24,13 @@ retroNWM_USGS_Eval = function(gageID,comID){
   }
   
   #Overall GOF---------------------------------------------------------------------------------
-  qDataNWM$ModelQPerc = calc_percentile(data=qDataNWM) 
-  qDataUSGS$USGSQPerc = calc_percentile(data=qDataUSGS)
+  qDataNWM$QPerc = calc_percentile(data=qDataNWM) 
+  qDataUSGS$QPerc = calc_percentile(data=qDataUSGS)
   
-  QGOF_relative = gof(sim=qDataNWM$ModelQPerc,obs=qDataUSGS$USGSQPerc)
-  QGOF_absolute = gof(sim=qDataNWM$ModelDischarge,obs=qDataUSGS$GageDischarge)
+  QGOF_relative = gof(sim=qDataNWM$QPerc,obs=qDataUSGS$QPerc)
+  QGOF_absolute = gof(sim=qDataNWM$Discharge,obs=qDataUSGS$Discharge)
   #Graphical representation
-  #ggof(sim=qDataNWM$ModelQPerc,obs=qDataUSGS$USGSQPerc)
+  #ggof(sim=qDataNWM$QPerc,obs=qDataUSGS$QPerc)
   #--------------------------------------------------------------------------------------------
   
   #GOF by season------------------------------------------------------------------------------  
@@ -48,14 +48,14 @@ retroNWM_USGS_Eval = function(gageID,comID){
   SeasonalGOF_relative = data.frame(Winter=rep(NA,20),Spring=rep(NA,20),Summer=rep(NA,20),Fall=rep(NA,20))
   SeasonalGOF_absolute = data.frame(Winter=rep(NA,20),Spring=rep(NA,20),Summer=rep(NA,20),Fall=rep(NA,20))
   for(i in c("Winter","Spring","Summer","Fall")){
-    qDataNWMSeasonal[(qDataNWMSeasonal$Season==i),"ModelQPerc"]=
+    qDataNWMSeasonal[(qDataNWMSeasonal$Season==i),"QPerc"]=
       calc_percentile(qDataNWMSeasonal[(qDataNWMSeasonal$Season==i),])
-    qDataUSGSSeasonal[(qDataUSGSSeasonal$Season==i),"USGSQPerc"]=
+    qDataUSGSSeasonal[(qDataUSGSSeasonal$Season==i),"QPerc"]=
       calc_percentile(qDataUSGSSeasonal[(qDataNWMSeasonal$Season==i),])
     NWMsub=qDataNWMSeasonal[(qDataNWMSeasonal$Season==i),]
     USGSsub=qDataUSGSSeasonal[(qDataUSGSSeasonal$Season==i),]
-    tempgof_relative=gof(sim=NWMsub$ModelQPerc,obs=USGSsub$USGSQPerc)
-    tempgof_absolute=gof(sim=NWMsub$ModelDischarge,obs=USGSsub$GageDischarge)
+    tempgof_relative=gof(sim=NWMsub$QPerc,obs=USGSsub$QPerc)
+    tempgof_absolute=gof(sim=NWMsub$Discharge,obs=USGSsub$Discharge)
     SeasonalGOF_relative[,i]=tempgof_relative[,1]
     SeasonalGOF_absolute[,i]=tempgof_absolute[,1]
   }
@@ -70,10 +70,10 @@ retroNWM_USGS_Eval = function(gageID,comID){
   YearlyGOF_absolute = data.frame(matrix(ncol = 24, nrow = 20))
   colnames(YearlyGOF_absolute)=as.character(seq(1993,2016,by=1))
   for (j in seq(1993,2016,by=1)){
-    tempgof_relative=gof(sim=qDataNWM[(qDataNWM$Year==j),"ModelQPerc"],
-                         obs=qDataUSGS[(qDataUSGS$Year==j),"USGSQPerc"])
-    tempgof_absolute=gof(sim=qDataNWM[(qDataNWM$Year==j),"ModelDischarge"],
-                         obs=qDataUSGS[(qDataUSGS$Year==j),"GageDischarge"])
+    tempgof_relative=gof(sim=qDataNWM[(qDataNWM$Year==j),"QPerc"],
+                         obs=qDataUSGS[(qDataUSGS$Year==j),"QPerc"])
+    tempgof_absolute=gof(sim=qDataNWM[(qDataNWM$Year==j),"Discharge"],
+                         obs=qDataUSGS[(qDataUSGS$Year==j),"Discharge"])
     YearlyGOF_relative[,as.character(j)]=tempgof_relative[,1]
     YearlyGOF_absolute[,as.character(j)]=tempgof_absolute[,1]
   }
