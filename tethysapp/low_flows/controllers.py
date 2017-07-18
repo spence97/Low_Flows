@@ -221,19 +221,13 @@ def forecast(request):
     """
 
 
-    if request.GET and 'feature_id' in request.GET:
-        feature_id = request.GET.get('feature_id')
-
-    COMID = str(feature_id)
-
-
     # setup some variables to process the date and time series values
     dateraw = []
     date1 = []
     value1 = []
     date2 = []
     value2 = []
-    comid = COMID
+    comid = '8020924'
     # The different configurations are short_range, medium_range, or analysis_assim
     config = 'medium_range'
     startdate = '2017-07-11'
@@ -253,7 +247,7 @@ def forecast(request):
         parser = e.split('"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >')
         dateraw.append(parser[0])
         value1.append(parser[1].split('<')[0])
-        value2.append(80)
+        value2.append(70)
 
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
@@ -264,8 +258,8 @@ def forecast(request):
     print(value2)
     print(date2)
 
-    data1 = go.Scatter(x=date1, y=value1)
-    data2 = go.Scatter(x=date2, y=value2)
+    data1 = go.Scatter(x=date1, y=value1, name='forecast')
+    data2 = go.Scatter(x=date2, y=value2, name='threshold')
 
     data=[data1,data2]
     nwm_plot = PlotlyView(data)

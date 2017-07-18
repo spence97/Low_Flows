@@ -1,6 +1,6 @@
 
 
-$(document).ready(function() {
+$(document).ready(function(e) {
   // Create new Overlay with the #popup element
     var popup = new ol.Overlay({
         element: document.getElementById('popup')
@@ -11,6 +11,12 @@ $(document).ready(function() {
 
     // Add the popup overlay to the map
     map.addOverlay(popup);
+
+    var value = e.target.value;
+    var ol_map = TETHYS_MAP_VIEW.getMap();
+    var layers = ol_map.getLayers();
+    console.log(layers);
+    console.log(value);
 
   function my_callback(points_layer, lines_layer, polygons_layer) {
        var source = lines_layer.getSource();
