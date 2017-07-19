@@ -1,4 +1,10 @@
+import os
+import json
 import datetime as dt
+import random
+import csv
+from pprint import pprint
+from datetime import datetime
 from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -7,8 +13,13 @@ import plotly
 import plotly.graph_objs as go
 from tethys_sdk.gizmos import *
 from .helpers import get_nwm_forecast
+from .app import LowFlows as app
+
 
 plotly.tools.set_credentials_file(username='spence97', api_key='y5y3btGzgv2KE5iNvebM')
+
+#Get current month for looking up threshold
+currentMonthNumber = datetime.now().month
 
 WORKSPACE = 'low_flows'
 GEOSERVER_URI = 'tethys.byu.edu/apps/lowflows'
@@ -18,31 +29,55 @@ def home(request):
     """
     Controller for the app home page.
     """
-
-
     # Define view options
     view_options = MVView(
         projection='EPSG:4326',
         center=[-100,40],
         zoom=5,
-        maxZoom=18,
+        maxZoom=15,
         minZoom=2
     )
 
+    # Full NHD Stream Layer (Higher than stream order 2)
     NHD_Streams = MVLayer(
         source='ImageWMS',
         options={'url': 'http://localhost:8080/geoserver/wms',
                  'params': {'LAYERS': 'lowflows:channels_nwm_v11_routeLink'}},
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
-        feature_selection=True,
+        feature_selection=False,
         geometry_attribute='the_geom'
     )
 
+    
+
+    # Deer Creek, Northern California
+
+    # Get path to Deer Creek GeoJson
+    app_workspace = app.get_app_workspace()
+    deercreek_json_path = os.path.join(app_workspace.path, 'GeoJSONFiles', 'NHDSubset_DeerCreek.geojson')
+    deercreek_json_string = ''
+
+    # Open the GeoJson
+    with open(deercreek_json_path, 'r') as deercreek_json_file:
+        for line in deercreek_json_file.readlines():
+            deercreek_json_string += line.strip()
+
+    # Convert to GeoJson dictionary
+    deercreek_json = json.loads(deercreek_json_string.strip())
+
+    # Add stats properties
+    for feature in deercreek_json['features']:
+
+        feature['properties']['x7q10'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['x7q2'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['perc5'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['perc25'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['min_forecast_flow'] = random.uniform(-1, 1) # derived from forecast
+
     DeerCreek_Streams = MVLayer(
-        source='ImageWMS',
-        options={'url': 'http://localhost:8080/geoserver/wms',
-                 'params': {'LAYERS': 'lowflows:NHDSubset_DeerCreek'}},
+        source='GeoJSON',
+        options=deercreek_json,
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
         feature_selection=True,
@@ -97,10 +132,39 @@ def home(request):
         feature_selection=False
     )
 
+    # Sipsey Fork
+
+    # Get path to Sipsey Fork GeoJson
+    app_workspace = app.get_app_workspace()
+    sipsey_json_path = os.path.join(app_workspace.path, 'GeoJSONFiles', 'NHDSubset_SipseyFork.geojson')
+    sipsey_json_string = ''
+
+    # Open the GeoJson
+    with open(sipsey_json_path, 'r') as sipsey_json_file:
+        for line in sipsey_json_file.readlines():
+            sipsey_json_string += line.strip()
+
+    # Convert to GeoJson dictionary
+    sipsey_json = json.loads(sipsey_json_string.strip())
+
+    # Add stats properties
+    for feature in sipsey_json['features']:
+        filename = 'X' + str(feature['properties']['feature_id']) + '.csv'
+        sipsey_stat_path = os.path.join(app_workspace.path, 'StatsFiles','SipseyFork', filename)
+        with open(sipsey_stat_path, 'r') as sipsey_stat_file:
+            monthlystats = csv.reader(sipsey_stat_file, delimiter=',', quotechar='|')
+            monthlystats = list(monthlystats)
+            statinfo = monthlystats[currentMonthNumber]
+        feature['properties']['x7q10'] = statinfo[7] # From CSVs
+        feature['properties']['x7q2'] = statinfo[8] # From CSVs
+        feature['properties']['perc5'] = statinfo[5] # From CSVs
+        feature['properties']['perc25'] = statinfo[6] # From CSVs
+        feature['properties']['min_forecast_flow'] = random.uniform(-1, 1) # derived from forecast
+
+
     SipseyFork_Streams = MVLayer(
-        source='ImageWMS',
-        options={'url': 'http://localhost:8080/geoserver/wms',
-                 'params': {'LAYERS': 'lowflows:NHDSubset_SipseyFork'}},
+        source='GeoJSON',
+        options=sipsey_json,
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
         feature_selection=True,
@@ -111,7 +175,7 @@ def home(request):
         source='ImageWMS',
         options={'url': 'http://localhost:8080/geoserver/wms',
                  'params': {'LAYERS': 'lowflows:USGSgage_SipseyFork'}},
-        legend_title='NHD streams',
+        legend_title='USGS Gage',
         legend_extent=[-173, 17, -65, 72],
         feature_selection=True,
         geometry_attribute='the_geom'
@@ -141,7 +205,7 @@ def home(request):
 
     load_watershed = Button(
         name='load-watershed',
-        display_text='Load Watershed',
+        display_text='Load Custom Watershed',
         href = reverse('low_flows:add_watershed')
     )
 
@@ -155,13 +219,15 @@ def home(request):
 
     )
 
-    stats_select = SelectInput(display_text='Select low flow statistical method',
+    stats_select = SelectInput(display_text='Select measure of low flow',
                             name='stats_select',
                             multiple=False,
-                            options=[('7Q10', '7Q10'), ('Percentiles', 'Percentiles'), ('Custom amount', 'Custom')],
-                            initial=['',''],
-                            select2_options={'placeholder': 'Select a low flow warning method',
+                            options=[('None', 'none'), ('7Q10', '7Q10'),('7Q2', '7Q2'), ('5th percentile', 'Perc5'), ('25th percentile', 'Perc25'), ('Custom amount', 'Custom')],
+                            initial=['None'],
+                            select2_options={'placeholder': 'Select a low flow threshold',
                                              'allowClear': True}
+
+
     )
 
     custom_amt = TableView(column_names=('COMID', 'Low Flow'),
@@ -220,14 +286,13 @@ def forecast(request):
     Controller for the Forecast Viewer page.
     """
 
-
     # setup some variables to process the date and time series values
     dateraw = []
     date1 = []
     value1 = []
     date2 = []
     value2 = []
-    comid = '8020924'
+    comid = '18578689'
     # The different configurations are short_range, medium_range, or analysis_assim
     config = 'medium_range'
     startdate = '2017-07-11'
@@ -247,7 +312,7 @@ def forecast(request):
         parser = e.split('"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >')
         dateraw.append(parser[0])
         value1.append(parser[1].split('<')[0])
-        value2.append(70)
+        value2.append(40)
 
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
@@ -258,8 +323,8 @@ def forecast(request):
     print(value2)
     print(date2)
 
-    data1 = go.Scatter(x=date1, y=value1, name='forecast')
-    data2 = go.Scatter(x=date2, y=value2, name='threshold')
+    data1 = go.Scatter(x=date1, y=value1, name='Forecast')
+    data2 = go.Scatter(x=date2, y=value2, name='Threshold')
 
     data=[data1,data2]
     nwm_plot = PlotlyView(data)
