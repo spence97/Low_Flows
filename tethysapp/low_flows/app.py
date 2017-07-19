@@ -84,18 +84,3 @@ class LowFlows(TethysAppBase):
             ),
         )
         return custom_settings
-
-    def persistent_store_settings(self):
-        """
-        Define Persistent Store Settings.
-        """
-        ps_settings = (
-            PersistentStoreDatabaseSetting(
-                name='primary_db',
-                description='primary database',
-                initializer='low_flows.model.init_primary_db',
-                required=True
-            ),
-        )
-
-        return ps_settings
