@@ -286,17 +286,24 @@ def forecast(request):
     Controller for the Forecast Viewer page.
     """
 
+    comid = '18578689'
+    stats_method = 'undefined'
+
+    if request.GET and 'comid' in request.GET:
+        comid = request.GET.get('comid')
+        stats_method = request.GET.get('stats_method')
+
     # setup some variables to process the date and time series values
     dateraw = []
     date1 = []
     value1 = []
     date2 = []
     value2 = []
-    comid = '18578689'
+    comid = comid
     # The different configurations are short_range, medium_range, or analysis_assim
-    config = 'medium_range'
-    startdate = '2017-07-11'
-    enddate = '2017-07-20'
+    config = 'long_range'
+    startdate = '2017-07-19'
+    enddate = '2017-07-30'
     forecasttime = '00'
     # call the function we set up above to get the first forecast
     watermlstring = str(get_nwm_forecast(config, comid, startdate, enddate, forecasttime))
