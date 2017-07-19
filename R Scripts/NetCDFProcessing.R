@@ -4,7 +4,7 @@ agg_hourly_streamflow = function(directory,comids,suffix){
   year=substr(directory,nchar(directory)-3,nchar(directory))
   #Create list for cycling through hourly files
   hourList=sprintf("%02d",seq(0,23,by=1))
-  
+
   #Cycle through the hourly time steps and convert to daily
   ncdfFileList=shell('dir /b', intern=TRUE)
   dateList=unique(substr(ncdfFileList,5,8))
@@ -46,7 +46,7 @@ agg_hourly_streamflow = function(directory,comids,suffix){
         nc_close(nwmFile)
       }
     }
-    
+
     #Calculate daily mean streamflow
     meanDailyQ=colMeans(hourlyQDF[,2:length(hourlyQDF)],na.rm=TRUE)
     #Add daily mean streamflow to data frame
@@ -65,6 +65,6 @@ agg_hourly_streamflow = function(directory,comids,suffix){
 #Set working directory to folder with a year of NetCDF data
 directory=getwd()
 #Set reach (From list of subsetted reaches/gages)
-comidfile=read.csv('~/GitHub/Low_Flows/Accessory Files/COMID2gage Index Tables/AL/NHDSubsetStreamOrder3_AL.csv')
-comids=comidfile$COMID
-daily_QDF=agg_hourly_streamflow(directory,comids,suffix="AL_Casestudy")
+comidfile=read.csv('~/GitHub/Low_Flows/Accessory Files/COMID2gage Index Tables/CA/NHDSubsetStreamOrder3_DeerCreek.csv')
+comids=comidfile$feature_id
+daily_QDF=agg_hourly_streamflow(directory,comids,suffix="CA_Casestudy")
