@@ -285,9 +285,6 @@ def forecast(request):
     """
     Controller for the Forecast Viewer page.
     """
-    if request.POST and 'feature_id' in request.POST:
-        COMID = 'feature_id'
-        return COMID
 
     # setup some variables to process the date and time series values
     dateraw = []
@@ -295,7 +292,7 @@ def forecast(request):
     value1 = []
     date2 = []
     value2 = []
-    comid = str(COMID)
+    comid = '18578689'
     # The different configurations are short_range, medium_range, or analysis_assim
     config = 'medium_range'
     startdate = '2017-07-11'
@@ -315,7 +312,7 @@ def forecast(request):
         parser = e.split('"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >')
         dateraw.append(parser[0])
         value1.append(parser[1].split('<')[0])
-        value2.append(70)
+        value2.append(40)
 
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
