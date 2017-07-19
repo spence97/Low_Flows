@@ -90,7 +90,7 @@ def home(request):
                  'params': {'LAYERS': 'lowflows:USGSgage_DeerCreek'}},
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
-        feature_selection=False,
+        feature_selection=True,
         geometry_attribute='the_geom'
     )
 
@@ -109,7 +109,7 @@ def home(request):
                  'params': {'LAYERS': 'lowflows:NHDSubset_SantaYnez'}},
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
-        feature_selection=False,
+        feature_selection=True,
         geometry_attribute='the_geom'
     )
 
@@ -119,7 +119,7 @@ def home(request):
                  'params': {'LAYERS': 'lowflows:USGSgage_SantaYnez'}},
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
-        feature_selection=False,
+        feature_selection=True,
         geometry_attribute='the_geom'
     )
 
@@ -177,7 +177,7 @@ def home(request):
                  'params': {'LAYERS': 'lowflows:USGSgage_SipseyFork'}},
         legend_title='USGS Gage',
         legend_extent=[-173, 17, -65, 72],
-        feature_selection=False,
+        feature_selection=True,
         geometry_attribute='the_geom'
     )
 
@@ -285,7 +285,9 @@ def forecast(request):
     """
     Controller for the Forecast Viewer page.
     """
-
+    if request.POST and 'feature_id' in request.POST:
+        COMID = 'feature_id'
+        return COMID
 
     # setup some variables to process the date and time series values
     dateraw = []
@@ -293,7 +295,7 @@ def forecast(request):
     value1 = []
     date2 = []
     value2 = []
-    comid = '8020924'
+    comid = str(COMID)
     # The different configurations are short_range, medium_range, or analysis_assim
     config = 'medium_range'
     startdate = '2017-07-11'
