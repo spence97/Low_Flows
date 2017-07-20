@@ -34,11 +34,12 @@ $(document).ready(function() {
              console.log(data);
               // Get coordinates of the point to set position of the popup
               var coordinates = feature.getGeometry().getCoordinates();
-              var lat = feature.get('lat')
-              var lon = feature.get('lon')
+              var lat = feature.get('lat');
+              var lon = feature.get('lon');
               coordinates = ol.proj.transform([lon, lat], 'EPSG:4326','EPSG:3857');
 
               var stats_method = $('#stats_select').value;
+
 
               var popup_content = '<div class="stream-popup">' +
                                       '<p><b>' + 'COMID:' + feature_id + '</b></p>' +

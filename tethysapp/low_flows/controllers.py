@@ -286,12 +286,48 @@ def forecast(request):
     Controller for the Forecast Viewer page.
     """
 
+    # Set the default COMID, statistics method, and forecast lag time values
     comid = '18578689'
     stats_method = 'undefined'
+    now = datetime.now()
+    currentMonthNumber = now.month
+    print(now)
+    forecasttime = '00'
 
+    # Determine which long range forecast time to query based on the current time
+    if now.hour < 6:
+        forecasttime = '00'
+        print('forecast time= ' + forecasttime)
+
+    elif now.hour >= 6 and now.hour < 12:
+        forecasttime = '06'
+        print('forecast time= ' + forecasttime)
+
+    elif now.hour >= 12 and now.hour < 18:
+        forecasttime = '12'
+        print('forecast time= ' + forecasttime)
+
+    elif now.hour >= 18 and now.hour < 24:
+        forecasttime = '18'
+        print('forecast time= ' + forecasttime)
+
+
+    # Access the selected stream's COMID and the the selected statistical threshold method
     if request.GET and 'comid' in request.GET:
         comid = request.GET.get('comid')
+        print comid
         stats_method = request.GET.get('stats_method')
+
+    print(stats_method)
+
+    app_workspace = app.get_app_workspace()
+    statsfilename = 'X' + str(comid) + '.csv'
+    print(statsfilename)
+    stat_path = os.path.join(app_workspace.path, 'StatsFiles', 'SipseyFork', statsfilename)
+    with open(stat_path, 'r') as statsfile:
+        monthlystats = csv.reader(statsfile, delimiter=',', quotechar='|')
+        monthlystats = list(monthlystats)
+        statinfo = monthlystats[currentMonthNumber]
 
     # setup some variables to process the date and time series values
     dateraw = []
@@ -300,26 +336,32 @@ def forecast(request):
     date2 = []
     value2 = []
     comid = comid
-    # The different configurations are short_range, medium_range, or analysis_assim
+    # The different configurations are short_range, medium_range, long_range, or analysis_assim
     config = 'long_range'
-    startdate = '2017-07-19'
-    enddate = '2017-07-30'
-    forecasttime = '00'
+    # Access the current date and create a string (YYYY-mm-dd) and use for the start date for the forecast query
+    startdate = datetime.now().date().strftime('%Y-%m-%d')
+    enddate = datetime.now().date().strftime('%Y-%m-%d')
+    forecasttime = forecasttime
     # call the function we set up above to get the first forecast
     watermlstring = str(get_nwm_forecast(config, comid, startdate, enddate, forecasttime))
-    # print (watermlstring)
     waterml = watermlstring.split('dateTimeUTC="')
-    # print ('')
-    # print (waterml[0])
-    # print ('')
-    # print (waterml[1])
     waterml.pop(0)
     # process the first forecast
     for e in waterml:
         parser = e.split('"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >')
         dateraw.append(parser[0])
         value1.append(parser[1].split('<')[0])
-        value2.append(40)
+        if stats_method == 'undefined':
+            value2.append('')
+        elif stats_method == '7Q2':
+            value2.append(statinfo[8])
+        elif stats_method == '7Q10':
+            value2.append(statinfo[7])
+        elif stats_method == 'Perc25':
+            value2.append(statinfo[6])
+        elif stats_method == 'Perc5':
+            value2.append(statinfo[5])
+
 
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
