@@ -34,15 +34,18 @@ $(document).ready(function() {
              console.log(data);
               // Get coordinates of the point to set position of the popup
               var coordinates = feature.getGeometry().getCoordinates();
-              var lat = feature.get('lat')
-              var lon = feature.get('lon')
+              var lat = feature.get('lat');
+              var lon = feature.get('lon');
               coordinates = ol.proj.transform([lon, lat], 'EPSG:4326','EPSG:3857');
+
+              var stats_method = $('#stats_select option:selected').val();
+
 
               var popup_content = '<div class="stream-popup">' +
                                       '<p><b>' + 'COMID:' + feature_id + '</b></p>' +
                                       '<table class="table  table-condensed">' +
                                       '</table>' +
-                                      '<a href="/apps/low-flows/forecast/?comid=' + feature_id + '" class="btn btn-success">View Forecast</a>' +
+                                      '<a href="/apps/low-flows/forecast/?comid=' + feature_id + '&stats_method=' + stats_method + '" class="btn btn-success">View Forecast</a>' +
                                   '</div>';
 
               // Clean up last popup and reinitialize

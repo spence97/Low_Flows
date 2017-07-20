@@ -23,4 +23,3 @@ def bar(request):
     print(feature_id)
 
     return JsonResponse(json_dict)
-

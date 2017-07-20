@@ -16,7 +16,7 @@
   {% url 'low_flows:Tutorial' as Tutorial_url %}
   <li class="title">Navigation</li>
   <li class="{% if request.path == home_url %}active{% endif %}"><a href="{{ home_url }}">Home</a></li>
-  <li class="{% if request.path == Tutorial_url %}active{% endif %}"><a href="{{ Tutorial_url }}">Forecast Viewer</a></li>
+  <li class="{% if request.path == Tutorial_url %}active{% endif %}"><a href="{{ Tutorial_url }}">Tutorial</a></li>
 {% endblock %}
 
 {% block app_content %}

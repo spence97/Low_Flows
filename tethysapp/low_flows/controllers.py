@@ -249,22 +249,6 @@ def home(request):
         display_text='Real-time Streamflow Data'
     )
 
-    view_forecast_button = Button(
-        display_text='View Forecast',
-        name='view_forecast_button',
-        icon='glyphicon glyphicon-plus',
-        style='success',
-        href=reverse('low_flows:forecast')
-    )
-
-    view_tutorial_button = Button(
-        display_text='View Forecast',
-        name='view_tutorial_button',
-        icon='glyphicon glyphicon-plus',
-        style='success',
-        href=reverse('low_flows:Tutorial')
-    )
-
 
     context = {
         'load_watershed':load_watershed,
@@ -273,9 +257,7 @@ def home(request):
         'custom_amt':custom_amt,
         'show_wq':show_wq,
         'show_rtq':show_rtq,
-        'watershed_map': watershed_map,
-        'view_forecast_button': view_forecast_button,
-        'view_tutorial_button': view_tutorial_button
+        'watershed_map': watershed_map
     }
 
     return render(request, 'low_flows/home.html', context)
@@ -286,47 +268,102 @@ def forecast(request):
     Controller for the Forecast Viewer page.
     """
 
+    # Set the default COMID, statistics method, and forecast lag time values
+    comid = '18578689'
+    stats_method = 'undefined'
+    now = datetime.now()
+    currentMonthNumber = now.month
+    print(now)
+    forecasttime = '00'
+
+    # Determine which long range forecast time to query based on the current time
+    if now.hour < 6:
+        forecasttime = '00'
+        print('forecast time= ' + forecasttime)
+
+    elif now.hour >= 6 and now.hour < 12:
+        forecasttime = '06'
+        print('forecast time= ' + forecasttime)
+
+    elif now.hour >= 12 and now.hour < 18:
+        forecasttime = '12'
+        print('forecast time= ' + forecasttime)
+
+    elif now.hour >= 18 and now.hour < 24:
+        forecasttime = '18'
+        print('forecast time= ' + forecasttime)
+
+
+    # Access the selected stream's COMID and the the selected statistical threshold method
+    if request.GET and 'comid' in request.GET:
+        comid = request.GET.get('comid')
+        print comid
+        stats_method = request.GET.get('stats_method')
+
+    print(stats_method)
+
+    app_workspace = app.get_app_workspace()
+    statsfilename = 'X' + str(comid) + '.csv'
+    UDThreshfile = 'UDThresh.csv'
+    print(statsfilename)
+    stat_path = os.path.join(app_workspace.path, 'StatsFiles', 'SipseyFork', statsfilename)
+    UDThresh_path = os.path.join(app_workspace.path, 'StatsFiles', 'SipseyFork', UDThreshfile)
+
+    with open(UDThresh_path, 'r') as UDfile:
+        UDthresh = csv.reader(UDfile, delimiter=',', quotechar='|')
+        COMID2thresh = [row for row in UDthresh if row[0] != int(comid)]
+        print(COMID2thresh)
+
+    with open(stat_path, 'r') as statsfile:
+        monthlystats = csv.reader(statsfile, delimiter=',', quotechar='|')
+        monthlystats = list(monthlystats)
+        statinfo = monthlystats[currentMonthNumber]
+
     # setup some variables to process the date and time series values
     dateraw = []
     date1 = []
     value1 = []
     date2 = []
     value2 = []
-    comid = '18578689'
-    # The different configurations are short_range, medium_range, or analysis_assim
-    config = 'medium_range'
-    startdate = '2017-07-11'
-    enddate = '2017-07-20'
-    forecasttime = '00'
+    comid = comid
+    # The different configurations are short_range, medium_range, long_range, or analysis_assim
+    config = 'long_range'
+    # Access the current date and create a string (YYYY-mm-dd) and use for the start date for the forecast query
+    startdate = datetime.now().date().strftime('%Y-%m-%d')
+    enddate = datetime.now().date().strftime('%Y-%m-%d')
+    forecasttime = forecasttime
     # call the function we set up above to get the first forecast
     watermlstring = str(get_nwm_forecast(config, comid, startdate, enddate, forecasttime))
-    # print (watermlstring)
     waterml = watermlstring.split('dateTimeUTC="')
-    # print ('')
-    # print (waterml[0])
-    # print ('')
-    # print (waterml[1])
     waterml.pop(0)
     # process the first forecast
     for e in waterml:
         parser = e.split('"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >')
         dateraw.append(parser[0])
         value1.append(parser[1].split('<')[0])
-        value2.append(40)
+        if stats_method == 'none':
+            value2.append('')
+        elif stats_method == '7Q2':
+            value2.append(statinfo[8])
+        elif stats_method == '7Q10':
+            value2.append(statinfo[7])
+        elif stats_method == 'Perc25':
+            value2.append(statinfo[6])
+        elif stats_method == 'Perc5':
+            value2.append(statinfo[5])
+        elif stats_method == 'Custom':
+            value2.append(COMID2thresh[1])
+
 
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
         date2.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
 
-    print(value1)
-    print(date1)
-    print(value2)
-    print(date2)
-
-    data1 = go.Scatter(x=date1, y=value1, name='Forecast')
-    data2 = go.Scatter(x=date2, y=value2, name='Threshold')
+    data1 = go.Scatter(x=date1, y=value1, name= 'NWM Forecast')
+    data2 = go.Scatter(x=date2, y=value2, name= 'Threshold: ' + stats_method)
 
     data=[data1,data2]
+
     nwm_plot = PlotlyView(data)
     #Create Plotly Plot of NWM Data
 

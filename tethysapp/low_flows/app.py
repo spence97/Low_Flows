@@ -32,6 +32,11 @@ class LowFlows(TethysAppBase):
                 controller='low_flows.controllers.home'
             ),
             UrlMap(
+                name='bar',
+                url='low-flows/rest/bar',
+                controller='low_flows.ajax_controllers.bar'
+            ),
+            UrlMap(
                 name='forecast',
                 url='low-flows/forecast',
                 controller='low_flows.controllers.forecast'
@@ -40,11 +45,6 @@ class LowFlows(TethysAppBase):
                 name='add_watershed',
                 url='low-flows/watershed/add',
                 controller='low_flows.controllers.add_watershed'
-            ),
-            UrlMap(
-                name='rest_bar',
-                url='low-flows/rest/bar',
-                controller='low_flows.ajax_controllers.bar'
             ),
             UrlMap(
                 name='Tutorial',
