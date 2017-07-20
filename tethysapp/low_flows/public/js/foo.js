@@ -38,7 +38,7 @@ $(document).ready(function() {
               var lon = feature.get('lon');
               coordinates = ol.proj.transform([lon, lat], 'EPSG:4326','EPSG:3857');
 
-              var stats_method = $('#stats_select').value;
+              var stats_method = $('#stats_select option:selected').val();
 
 
               var popup_content = '<div class="stream-popup">' +

@@ -249,22 +249,6 @@ def home(request):
         display_text='Real-time Streamflow Data'
     )
 
-    view_forecast_button = Button(
-        display_text='View Forecast',
-        name='view_forecast_button',
-        icon='glyphicon glyphicon-plus',
-        style='success',
-        href=reverse('low_flows:forecast')
-    )
-
-    view_tutorial_button = Button(
-        display_text='View Forecast',
-        name='view_tutorial_button',
-        icon='glyphicon glyphicon-plus',
-        style='success',
-        href=reverse('low_flows:Tutorial')
-    )
-
 
     context = {
         'load_watershed':load_watershed,
@@ -273,9 +257,7 @@ def home(request):
         'custom_amt':custom_amt,
         'show_wq':show_wq,
         'show_rtq':show_rtq,
-        'watershed_map': watershed_map,
-        'view_forecast_button': view_forecast_button,
-        'view_tutorial_button': view_tutorial_button
+        'watershed_map': watershed_map
     }
 
     return render(request, 'low_flows/home.html', context)
@@ -322,8 +304,16 @@ def forecast(request):
 
     app_workspace = app.get_app_workspace()
     statsfilename = 'X' + str(comid) + '.csv'
+    UDThreshfile = 'UDThresh.csv'
     print(statsfilename)
     stat_path = os.path.join(app_workspace.path, 'StatsFiles', 'SipseyFork', statsfilename)
+    UDThresh_path = os.path.join(app_workspace.path, 'StatsFiles', 'SipseyFork', UDThreshfile)
+
+    with open(UDThresh_path, 'r') as UDfile:
+        UDthresh = csv.reader(UDfile, delimiter=',', quotechar='|')
+        COMID2thresh = [row for row in UDthresh if row[0] != int(comid)]
+        print(COMID2thresh)
+
     with open(stat_path, 'r') as statsfile:
         monthlystats = csv.reader(statsfile, delimiter=',', quotechar='|')
         monthlystats = list(monthlystats)
@@ -351,7 +341,7 @@ def forecast(request):
         parser = e.split('"  methodCode="1"  sourceCode="1"  qualityControlLevelCode="1" >')
         dateraw.append(parser[0])
         value1.append(parser[1].split('<')[0])
-        if stats_method == 'undefined':
+        if stats_method == 'none':
             value2.append('')
         elif stats_method == '7Q2':
             value2.append(statinfo[8])
@@ -361,21 +351,19 @@ def forecast(request):
             value2.append(statinfo[6])
         elif stats_method == 'Perc5':
             value2.append(statinfo[5])
+        elif stats_method == 'Custom':
+            value2.append(COMID2thresh[1])
 
 
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
         date2.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
 
-    print(value1)
-    print(date1)
-    print(value2)
-    print(date2)
-
-    data1 = go.Scatter(x=date1, y=value1, name='Forecast')
-    data2 = go.Scatter(x=date2, y=value2, name='Threshold')
+    data1 = go.Scatter(x=date1, y=value1, name= 'NWM Forecast')
+    data2 = go.Scatter(x=date2, y=value2, name= 'Threshold: ' + stats_method)
 
     data=[data1,data2]
+
     nwm_plot = PlotlyView(data)
     #Create Plotly Plot of NWM Data
 
