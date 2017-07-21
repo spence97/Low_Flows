@@ -270,7 +270,7 @@ def forecast(request):
 
     # Set the default COMID, statistics method, and forecast lag time values
     comid = '18578689'
-    stats_method = 'undefined'
+    stats_method = 'none'
     now = datetime.now()
     currentMonthNumber = now.month
     print(now)
@@ -297,17 +297,18 @@ def forecast(request):
     # Access the selected stream's COMID and the the selected statistical threshold method
     if request.GET and 'comid' in request.GET:
         comid = request.GET.get('comid')
-        print comid
         stats_method = request.GET.get('stats_method')
+        watershed_name = request.GET.get('watershed')
 
     print(stats_method)
+    stats_method2 = ''
 
     app_workspace = app.get_app_workspace()
     statsfilename = 'X' + str(comid) + '.csv'
     UDThreshfile = 'UDThresh.csv'
     print(statsfilename)
-    stat_path = os.path.join(app_workspace.path, 'StatsFiles', 'SipseyFork', statsfilename)
-    UDThresh_path = os.path.join(app_workspace.path, 'StatsFiles', 'SipseyFork', UDThreshfile)
+    stat_path = os.path.join(app_workspace.path, 'StatsFiles', watershed_name, statsfilename)
+    UDThresh_path = os.path.join(app_workspace.path, 'StatsFiles', watershed_name, UDThreshfile)
 
     with open(UDThresh_path, 'r') as UDfile:
         UDthresh = csv.reader(UDfile, delimiter=',', quotechar='|')
@@ -325,6 +326,8 @@ def forecast(request):
     value1 = []
     date2 = []
     value2 = []
+    date3 = []
+    value3= []
     comid = comid
     # The different configurations are short_range, medium_range, long_range, or analysis_assim
     config = 'long_range'
@@ -343,14 +346,26 @@ def forecast(request):
         value1.append(parser[1].split('<')[0])
         if stats_method == 'none':
             value2.append('')
+            value3.append('')
+            stats_method2 = 'none'
         elif stats_method == '7Q2':
             value2.append(statinfo[8])
+            value3.append(statinfo[7])
+            stats_method2 = '7Q10'
         elif stats_method == '7Q10':
-            value2.append(statinfo[7])
+            value2.append(statinfo[8])
+            value3.append(statinfo[7])
+            stats_method = '7Q2'
+            stats_method2 = '7Q10'
         elif stats_method == 'Perc25':
             value2.append(statinfo[6])
+            value3.append(statinfo[5])
+            stats_method2 = 'Perc5'
         elif stats_method == 'Perc5':
-            value2.append(statinfo[5])
+            value2.append(statinfo[6])
+            value3.append(statinfo[5])
+            stats_method = 'Perc25'
+            stats_method2 = 'Perc5'
         elif stats_method == 'Custom':
             value2.append(COMID2thresh[1])
 
@@ -358,11 +373,19 @@ def forecast(request):
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
         date2.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
+        date3.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
 
     data1 = go.Scatter(x=date1, y=value1, name= 'NWM Forecast')
-    data2 = go.Scatter(x=date2, y=value2, name= 'Threshold: ' + stats_method)
+    data2 = go.Scatter(x=date2, y=value2, name= stats_method)
+    data3 = go.Scatter(x=date3, y=value3, marker = dict(color = '#C62400', line = dict(width = 1)), name= stats_method2)
 
-    data=[data1,data2]
+
+    if stats_method == '7Q2' or stats_method == '7Q10' or stats_method == 'Perc5' or stats_method == 'Perc25':
+        data=[data1,data2,data3]
+    elif stats_method == 'Custom':
+        data=[data1,data2]
+    else:
+        data=[data1]
 
     nwm_plot = PlotlyView(data)
     #Create Plotly Plot of NWM Data

@@ -39,13 +39,17 @@ $(document).ready(function() {
               coordinates = ol.proj.transform([lon, lat], 'EPSG:4326','EPSG:3857');
 
               var stats_method = $('#stats_select option:selected').val();
+              var watershed = $('#watershedselect option:selected').val();
+              console.log(stats_method);
+              console.log(watershed);
+
 
 
               var popup_content = '<div class="stream-popup">' +
                                       '<p><b>' + 'COMID:' + feature_id + '</b></p>' +
                                       '<table class="table  table-condensed">' +
                                       '</table>' +
-                                      '<a href="/apps/low-flows/forecast/?comid=' + feature_id + '&stats_method=' + stats_method + '" class="btn btn-success">View Forecast</a>' +
+                                      '<a href="/apps/low-flows/forecast/?watershed=' + watershed + '&comid=' + feature_id + '&stats_method=' + stats_method + '" class="btn btn-success">View Forecast</a>' +
                                   '</div>';
 
               // Clean up last popup and reinitialize
