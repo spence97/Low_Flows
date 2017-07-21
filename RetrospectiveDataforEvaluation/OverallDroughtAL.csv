@@ -1,0 +1,3 @@
+Drought,,,,,,,,,,,,,,,,,,,,
+,OverallMAE,WinterMAE,SpringMAE,SummerMAE,FallMAE,OverallR2,WinterR2,SpringR2,SummerR2,FallR2,OverallRMSE,WinterRMSE,SpringRMSE,SummerRMSE,FallRMSE,OverallPBIAS,WinterPBIAS,SpringPBIAS,SummerPBIAS,FallPBIAS
+18578829,11.84,26.54,5.65,25.02,25.4,0.75,0.12,0.54,0.69,0.34,15.06,32.96,8.04,29.85,31.3,13.6,3.7,54.5,74.1,13.6
