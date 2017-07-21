@@ -92,7 +92,7 @@ $(document).ready(function() {
     if (q > x7q10) {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: '#598bdb',
+          color: '#001dff',
           width: 3
         })
       });
@@ -100,7 +100,7 @@ $(document).ready(function() {
     } else {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: 'red',
+          color: '#c62400',
           width: 3
         })
       });
@@ -110,7 +110,7 @@ $(document).ready(function() {
   }
 
     function x7q2_styler(feature, resolution) {
-    // get the 7q10 property
+    // get the 7q2 property
     var x7q2 = feature.getProperties()['x7q2'];
     var q = feature.getProperties()['min_forecast_flow'];
     var style;
@@ -119,7 +119,7 @@ $(document).ready(function() {
     if (q > x7q2) {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: '#598bdb',
+          color: '#001dff',
           width: 3
         })
       });
@@ -127,7 +127,7 @@ $(document).ready(function() {
     } else {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: 'red',
+          color: '#c97100',
           width: 3
         })
       });
@@ -146,7 +146,7 @@ $(document).ready(function() {
     if (q > perc5) {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: '#598bdb',
+          color: '#001dff',
           width: 3
         })
       });
@@ -154,7 +154,7 @@ $(document).ready(function() {
     } else {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: 'red',
+          color: '#c62400',
           width: 3
         })
       });
@@ -173,7 +173,7 @@ $(document).ready(function() {
     if (q > perc25) {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: '#598bdb',
+          color: '#001dff',
           width: 3
         })
       });
@@ -181,7 +181,7 @@ $(document).ready(function() {
     } else {
       style = new ol.style.Style({
         stroke: new ol.style.Stroke({
-          color: 'red',
+          color: '#c97100',
           width: 3
         })
       });
