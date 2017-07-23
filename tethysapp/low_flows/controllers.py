@@ -49,8 +49,6 @@ def home(request):
         geometry_attribute='the_geom'
     )
 
-    
-
     # Deer Creek, Northern California
 
     # Get path to Deer Creek GeoJson
@@ -68,11 +66,16 @@ def home(request):
 
     # Add stats properties
     for feature in deercreek_json['features']:
-
-        feature['properties']['x7q10'] = random.uniform(-1, 1) # From CSVs
-        feature['properties']['x7q2'] = random.uniform(-1, 1) # From CSVs
-        feature['properties']['perc5'] = random.uniform(-1, 1) # From CSVs
-        feature['properties']['perc25'] = random.uniform(-1, 1) # From CSVs
+        filename = 'X' + str(feature['properties']['feature_id']) + '.csv'
+        deercreek_stat_path = os.path.join(app_workspace.path, 'StatsFiles','DeerCreek', filename)
+        with open(deercreek_stat_path, 'r') as deercreek_stat_file:
+            monthlystats = csv.reader(deercreek_stat_file, delimiter=',', quotechar='|')
+            monthlystats = list(monthlystats)
+            statinfo = monthlystats[currentMonthNumber]
+        feature['properties']['x7q10'] = statinfo[7] # From CSVs
+        feature['properties']['x7q2'] = statinfo[8] # From CSVs
+        feature['properties']['perc5'] = statinfo[5] # From CSVs
+        feature['properties']['perc25'] = statinfo[6] # From CSVs
         feature['properties']['min_forecast_flow'] = random.uniform(-1, 1) # derived from forecast
 
     DeerCreek_Streams = MVLayer(
@@ -103,10 +106,35 @@ def home(request):
         feature_selection=False
     )
 
+    
+
+    # Santa Ynez
+
+    # Get path to Santa Ynez GeoJson
+    app_workspace = app.get_app_workspace()
+    santaynez_json_path = os.path.join(app_workspace.path, 'GeoJSONFiles', 'NHDSubset_SantaYnez.geojson')
+    santaynez_json_string = ''
+
+    # Open the GeoJson
+    with open(santaynez_json_path, 'r') as santaynez_json_file:
+        for line in santaynez_json_file.readlines():
+            santaynez_json_string += line.strip()
+
+    # Convert to GeoJson dictionary
+    santaynez_json = json.loads(santaynez_json_string.strip())
+
+    # Add stats properties
+    for feature in santaynez_json['features']:
+        feature['properties']['x7q10'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['x7q2'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['perc5'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['perc25'] = random.uniform(-1, 1) # From CSVs
+        feature['properties']['min_forecast_flow'] = random.uniform(-1, 1) # derived from forecast
+
+
     SantaYnez_Streams = MVLayer(
-        source='ImageWMS',
-        options={'url': 'http://localhost:8080/geoserver/wms',
-                 'params': {'LAYERS': 'lowflows:NHDSubset_SantaYnez'}},
+        source='GeoJSON',
+        options=santaynez_json,
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
         feature_selection=True,
@@ -386,6 +414,7 @@ def forecast(request):
         data=[data1,data2]
     else:
         data=[data1]
+
 
     nwm_plot = PlotlyView(data)
     #Create Plotly Plot of NWM Data
