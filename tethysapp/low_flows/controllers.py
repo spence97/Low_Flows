@@ -4,7 +4,7 @@ import datetime as dt
 import random
 import csv
 from pprint import pprint
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -39,6 +39,7 @@ def home(request):
     )
 
     # Full NHD Stream Layer (Higher than stream order 2)
+
     NHD_Streams = MVLayer(
         source='ImageWMS',
         options={'url': 'http://localhost:8080/geoserver/wms',
@@ -159,7 +160,7 @@ def home(request):
         feature['properties']['x7q2'] = statinfo[8] # From CSVs
         feature['properties']['perc5'] = statinfo[5] # From CSVs
         feature['properties']['perc25'] = statinfo[6] # From CSVs
-        feature['properties']['min_forecast_flow'] = random.uniform(-1, 1) # derived from forecast
+        feature['properties']['min_forecast_flow'] = random.uniform(0, 7) # derived from forecast
 
 
     SipseyFork_Streams = MVLayer(
@@ -230,13 +231,20 @@ def home(request):
 
     )
 
-    custom_amt = TableView(column_names=('COMID', 'Low Flow'),
-                            rows=[('', '')],
-                            hover=True,
-                            striped=True,
-                            bordered=True,
-                            condensed=True,
-                            editable_columns = ('COMIDInput', 'threshInput')
+    custom_amt = DataTableView(column_names=('COMID', 'Low Flow'),
+                            rows=[('18578689', '10 cfs'), ('18578829','20 cfs')],
+                            display_text='User-defined flow thresholds',
+                            searching=False,
+                            orderClasses=False,
+                            lengthMenu=[[2,4,6,8,10],[2,4,6,8,10]],
+
+    )
+
+    add_threshold = Button(
+        name='add-threshold',
+        display_text='Add Custom Threshold',
+        icon = 'glyphicon glyphicon-plus',
+        style = 'success',
     )
 
     show_wq = ToggleSwitch(
@@ -255,6 +263,7 @@ def home(request):
         'view_watershed':view_watershed,
         'stats_select':stats_select,
         'custom_amt':custom_amt,
+        'add_threshold':add_threshold,
         'show_wq':show_wq,
         'show_rtq':show_rtq,
         'watershed_map': watershed_map
@@ -274,25 +283,21 @@ def forecast(request):
     now = datetime.now()
     currentMonthNumber = now.month
     print(now)
-    forecasttime = '00'
+    startdate = datetime.now().date().strftime('%Y-%m-%d')
+    enddate = datetime.now().date().strftime('%Y-%m-%d')
 
     # Determine which long range forecast time to query based on the current time
-    if now.hour < 6:
-        forecasttime = '00'
-        print('forecast time= ' + forecasttime)
+    if now.hour < 13:
+        forecastdate = datetime.now() - timedelta(days=1)
+        startdate = forecastdate.date().strftime('%Y-%m-%d')
+        enddate = forecastdate.date().strftime('%Y-%m-%d')
+        print(startdate)
+        print(enddate)
 
-    elif now.hour >= 6 and now.hour < 12:
-        forecasttime = '06'
-        print('forecast time= ' + forecasttime)
-
-    elif now.hour >= 12 and now.hour < 18:
-        forecasttime = '12'
-        print('forecast time= ' + forecasttime)
-
-    elif now.hour >= 18 and now.hour < 24:
-        forecasttime = '18'
-        print('forecast time= ' + forecasttime)
-
+    else:
+        startdate = datetime.now().date().strftime('%Y-%m-%d')
+        enddate = datetime.now().date().strftime('%Y-%m-%d')
+        print(startdate)
 
     # Access the selected stream's COMID and the the selected statistical threshold method
     if request.GET and 'comid' in request.GET:
@@ -313,7 +318,7 @@ def forecast(request):
     with open(UDThresh_path, 'r') as UDfile:
         UDthresh = csv.reader(UDfile, delimiter=',', quotechar='|')
         COMID2thresh = [row for row in UDthresh if row[0] != int(comid)]
-        print(COMID2thresh)
+
 
     with open(stat_path, 'r') as statsfile:
         monthlystats = csv.reader(statsfile, delimiter=',', quotechar='|')
@@ -327,16 +332,17 @@ def forecast(request):
     date2 = []
     value2 = []
     date3 = []
-    value3= []
+    value3 = []
+    date4 = []
+    value4 = []
+
+
     comid = comid
     # The different configurations are short_range, medium_range, long_range, or analysis_assim
     config = 'long_range'
     # Access the current date and create a string (YYYY-mm-dd) and use for the start date for the forecast query
-    startdate = datetime.now().date().strftime('%Y-%m-%d')
-    enddate = datetime.now().date().strftime('%Y-%m-%d')
-    forecasttime = forecasttime
     # call the function we set up above to get the first forecast
-    watermlstring = str(get_nwm_forecast(config, comid, startdate, enddate, forecasttime))
+    watermlstring = str(get_nwm_forecast(config, comid, startdate, enddate))
     waterml = watermlstring.split('dateTimeUTC="')
     waterml.pop(0)
     # process the first forecast
@@ -369,23 +375,34 @@ def forecast(request):
         elif stats_method == 'Custom':
             value2.append(COMID2thresh[1])
 
+        if comid=='18578689':
+            value4.append(10)
+        elif comid=='18578829':
+            value4.append(20)
+
 
     for e in dateraw:
         date1.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
         date2.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
         date3.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
+        if comid=='18578689':
+            date4.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
+        elif comid=='18578829':
+            date4.append(dt.datetime.strptime(e, "%Y-%m-%dT%H:%M:%S"))
 
     data1 = go.Scatter(x=date1, y=value1, name= 'NWM Forecast')
-    data2 = go.Scatter(x=date2, y=value2, name= stats_method)
-    data3 = go.Scatter(x=date3, y=value3, marker = dict(color = '#C62400', line = dict(width = 1)), name= stats_method2)
+    data2 = go.Scatter(x=date2, y=value2, marker = dict(color = '#ff8800', line = dict(width = 4)), name= stats_method)
+    data3 = go.Scatter(x=date3, y=value3, marker = dict(color = '#ad1f00', line = dict(width = 4)), name= stats_method2)
+    data4 = go.Scatter(x=date4, y=value4, marker = dict(color = '#00ada1', line = dict(width = 4)), name= 'User Defined')
+
 
 
     if stats_method == '7Q2' or stats_method == '7Q10' or stats_method == 'Perc5' or stats_method == 'Perc25':
-        data=[data1,data2,data3]
+        data=[data1,data2,data3,data4]
     elif stats_method == 'Custom':
-        data=[data1,data2]
+        data=[data1,data2,data4]
     else:
-        data=[data1]
+        data=[data1,data4]
 
     nwm_plot = PlotlyView(data)
     #Create Plotly Plot of NWM Data
