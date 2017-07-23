@@ -1,7 +1,8 @@
-#inner-app-content {
-    padding: 0;
-}
-
-#app-content, #inner-app-content, #map_view_outer_container {
+#app-content {
     height: 100%;
 }
+
+#add_custom_thresh {
+    width: 100px
+}
+
