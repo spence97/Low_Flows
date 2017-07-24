@@ -43,10 +43,10 @@ def home(request):
     NHD_Streams = MVLayer(
         source='ImageWMS',
         options={'url': 'http://localhost:8080/geoserver/wms',
-                 'params': {'LAYERS': 'lowflows:channels_nwm_v11_routeLink'}},
+                 'params': {'LAYERS': 'lowflows:NHD_Streams'}},
         legend_title='NHD streams',
         legend_extent=[-173, 17, -65, 72],
-        feature_selection=False,
+        feature_selection=True,
         geometry_attribute='the_geom'
     )
 
@@ -77,7 +77,7 @@ def home(request):
         feature['properties']['x7q2'] = statinfo[8] # From CSVs
         feature['properties']['perc5'] = statinfo[5] # From CSVs
         feature['properties']['perc25'] = statinfo[6] # From CSVs
-        feature['properties']['min_forecast_flow'] = random.uniform(-1, 1) # derived from forecast
+        feature['properties']['min_forecast_flow'] = random.uniform(0, 20) # derived from forecast
 
     DeerCreek_Streams = MVLayer(
         source='GeoJSON',
@@ -126,11 +126,11 @@ def home(request):
 
     # Add stats properties
     for feature in santaynez_json['features']:
-        feature['properties']['x7q10'] = random.uniform(-1, 1) # From CSVs
-        feature['properties']['x7q2'] = random.uniform(-1, 1) # From CSVs
-        feature['properties']['perc5'] = random.uniform(-1, 1) # From CSVs
-        feature['properties']['perc25'] = random.uniform(-1, 1) # From CSVs
-        feature['properties']['min_forecast_flow'] = random.uniform(-1, 1) # derived from forecast
+        feature['properties']['x7q10'] = random.uniform(0, 5) # From CSVs
+        feature['properties']['x7q2'] = random.uniform(0, 10) # From CSVs
+        feature['properties']['perc5'] = random.uniform(0, 5) # From CSVs
+        feature['properties']['perc25'] = random.uniform(0, 10) # From CSVs
+        feature['properties']['min_forecast_flow'] = random.uniform(0, 7) # derived from forecast
 
 
     SantaYnez_Streams = MVLayer(
@@ -235,13 +235,15 @@ def home(request):
     load_watershed = Button(
         name='load-watershed',
         display_text='Load Custom Watershed',
-        href = reverse('low_flows:add_watershed')
+        href = reverse('low_flows:add_watershed'),
+        icon = 'glyphicon glyphicon-plus',
+        style = 'success',
     )
 
     view_watershed = SelectInput(display_text='Select Watershed',
                             name='watershedselect',
                             multiple=False,
-                            options=[('Full NHD Stream Network','NHD'), ('Deer Creek','DeerCreek'), ('Santa Ynez', 'SantaYnez'), ('Sipsey Fork', 'SipseyFork')],
+                            options=[('NHD Stream Network','NHD'), ('Deer Creek','DeerCreek'), ('Santa Ynez', 'SantaYnez'), ('Sipsey Fork', 'SipseyFork')],
                             initial=['', ''],
                             select2_options={'placeholder': 'Select a watershed',
                                              'allowClear': True}
